@@ -1,0 +1,162 @@
+/* dashboard.css — charts, meters and dashboard-specific widgets */
+
+.chart {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  display: block;
+}
+
+.chart.sq {
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.chart .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.chart .refline {
+  stroke: var(--warn);
+  stroke-dasharray: 4 4;
+  stroke-width: 1.2;
+}
+
+.chart .axis {
+  fill: var(--dim);
+  font-size: 10.5px;
+}
+
+.chart .axis.dim {
+  opacity: .7;
+}
+
+.chart .val {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: .82rem;
+  color: var(--dim);
+  margin: .3rem 0 .8rem;
+}
+
+.legend i,.probbar-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: .35rem;
+}
+
+.probbar-track {
+  display: flex;
+  height: 46px;
+  border-radius: 10px;
+  overflow: hidden;
+  gap: 2px;
+  background: var(--bg);
+}
+
+.probbar-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2px;
+  color: #06101e;
+  font-weight: 700;
+  font-size: .92rem;
+  overflow: hidden;
+  transition: flex .3s;
+}
+
+.probbar-seg.is-pick {
+  box-shadow: inset 0 0 0 3px rgba(255,255,255,.85);
+}
+
+.probbar-seg span {
+  padding: 0 .3rem;
+  white-space: nowrap;
+}
+
+.probbar-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin: .5rem 0 1rem;
+  font-size: .9rem;
+  color: var(--dim);
+}
+
+.probbar-legend .is-pick {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  margin-right: 3px;
+  font-size: .74rem;
+  font-weight: 700;
+  color: #06101e;
+}
+
+.chip.r-W {
+  background: var(--ok);
+}
+
+.chip.r-D {
+  background: var(--c-draw);
+}
+
+.chip.r-L {
+  background: var(--bad);
+}
+
+.confmat {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.confmat th,.confmat td {
+  padding: .5rem .7rem;
+  border: 1px solid var(--line);
+  text-align: center;
+  font-size: .9rem;
+}
+
+.confmat th {
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.confmat td {
+  background: rgba(74,163,255,calc(var(--t,0) * .35));
+}
+
+.confmat td.diag {
+  background: rgba(62,207,142,calc(var(--t,0) * .4 + .04));
+  font-weight: 700;
+}
+
+.pickcell {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #04101f;
+}

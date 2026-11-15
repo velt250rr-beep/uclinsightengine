@@ -1,0 +1,334 @@
+/* AMAI chat: controls, conversation layout, messages, and compact-screen rules. */
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.amai-card {
+  border-color: rgba(111,174,247,.3);
+  background: linear-gradient(145deg,rgba(14,29,55,.99),rgba(7,17,34,.98));
+}
+
+.amai-card .card-h {
+  background: linear-gradient(90deg,rgba(65,125,207,.13),rgba(90,78,163,.035) 70%,transparent);
+}
+
+.amai-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.amai-panel-top,.amai-brand {
+  display: flex;
+  align-items: center;
+}
+
+.amai-panel-top {
+  justify-content: space-between;
+  gap: .8rem;
+}
+
+.amai-brand {
+  gap: .72rem;
+  min-width: 0;
+}
+
+.amai-brand>div {
+  display: grid;
+  gap: .18rem;
+  min-width: 0;
+}
+
+.amai-brand b {
+  color: #eaf4ff;
+  font-size: .88rem;
+  letter-spacing: .005em;
+}
+
+.amai-brand small {
+  color: #91a8c8;
+  font-size: .7rem;
+}
+
+.amai-orb {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(133,196,255,.43);
+  border-radius: 13px;
+  background: radial-gradient(circle at 30% 22%,rgba(158,222,255,.32),rgba(48,110,186,.2) 56%,rgba(72,68,143,.27));
+  box-shadow: 0 0 0 4px rgba(100,164,234,.06),0 0 23px rgba(77,145,235,.18);
+  color: #c9ecff;
+  font-size: 1.08rem;
+  text-shadow: 0 0 12px rgba(145,217,255,.76);
+}
+
+.amai-thread {
+  display: grid;
+  align-content: start;
+  gap: .75rem;
+  min-height: 145px;
+  max-height: 340px;
+  overflow: auto;
+  padding: .9rem;
+  border: 1px solid rgba(114,157,213,.16);
+  border-radius: 15px;
+  background: linear-gradient(145deg,rgba(4,13,27,.7),rgba(9,20,38,.62));
+  scrollbar-width: thin;
+  scrollbar-color: rgba(114,175,244,.42) transparent;
+}
+
+.amai-welcome {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  max-width: 660px;
+  margin: auto 0;
+  color: #b8c9e2;
+}
+
+.amai-welcome .amai-orb {
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  font-size: .92rem;
+}
+
+.amai-welcome b {
+  display: block;
+  margin: .06rem 0 .25rem;
+  color: #e6f2ff;
+  font-size: .9rem;
+}
+
+.amai-welcome p {
+  margin: 0;
+  color: #8ea5c5;
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.amai-message {
+  display: flex;
+  flex-direction: column;
+  gap: .24rem;
+  max-width: min(88%,720px);
+}
+
+.amai-message.user {
+  justify-self: end;
+  align-items: flex-end;
+}
+
+.amai-message.assistant {
+  justify-self: start;
+  align-items: flex-start;
+}
+
+.amai-message-label {
+  padding-inline: .35rem;
+  color: #7e9abd;
+  font-size: .63rem;
+  font-weight: 790;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.amai-bubble {
+  padding: .72rem .88rem;
+  border: 1px solid rgba(118,159,218,.16);
+  border-radius: 14px;
+  background: rgba(17,34,60,.84);
+  color: #d7e4f5;
+  font-size: .82rem;
+  line-height: 1.62;
+  overflow-wrap: anywhere;
+}
+
+.amai-message.user .amai-bubble {
+  border-color: rgba(101,171,244,.24);
+  border-bottom-right-radius: 5px;
+  background: linear-gradient(135deg,rgba(41,94,157,.48),rgba(46,63,119,.46));
+  color: #edf6ff;
+}
+
+.amai-message.assistant .amai-bubble {
+  border-bottom-left-radius: 5px;
+}
+
+.amai-thinking {
+  display: flex;
+  align-items: center;
+  gap: .28rem;
+  padding: .35rem .4rem;
+  color: #91a8c8;
+  font-size: .72rem;
+}
+
+.amai-thinking i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #86caff;
+  animation: amai-pulse 1s ease-in-out infinite alternate;
+}
+
+.amai-thinking i:nth-child(2) {
+  animation-delay: .18s;
+}
+
+.amai-thinking i:nth-child(3) {
+  animation-delay: .36s;
+}
+
+@keyframes amai-pulse {
+  to {
+    opacity: .3;
+    transform: translateY(-3px);
+  }
+}
+
+.amai-quick-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .48rem;
+}
+
+.amai-prompt {
+  min-height: 34px;
+  padding: .42rem .7rem;
+  border: 1px solid rgba(120,166,226,.2);
+  border-radius: 999px;
+  background: rgba(17,35,62,.65);
+  color: #abc5e6;
+  font: inherit;
+  font-size: .69rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+
+.amai-prompt:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(128,191,255,.52);
+  background: rgba(37,75,123,.5);
+  color: #eff7ff;
+}
+
+.amai-prompt:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+.amai-form {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: end;
+  gap: .65rem;
+}
+
+.amai-form textarea {
+  min-height: 54px;
+  max-height: 150px;
+  resize: vertical;
+  padding: .7rem .8rem;
+  border-radius: 12px;
+  background: rgba(4,13,27,.78);
+  font: inherit;
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.amai-form .btn {
+  min-width: 125px;
+  justify-content: center;
+  gap: .42rem;
+}
+
+.amai-privacy,.amai-disclaimer {
+  margin: 0;
+  color: #7e94b3;
+  font-size: .67rem;
+  line-height: 1.55;
+}
+
+.amai-privacy a {
+  color: #9bceff;
+}
+
+.amai-disclaimer {
+  padding-top: .68rem;
+  border-top: 1px solid rgba(117,157,211,.12);
+}
+
+.amai-config,.amai-error {
+  margin: 0;
+  font-size: .78rem;
+}
+
+.amai-config {
+  border-left-width: 3px;
+}
+
+@media(max-width:560px) {
+  .amai-panel {
+    gap: .8rem;
+  }
+  .amai-panel-top {
+    align-items: flex-start;
+  }
+  .amai-brand {
+    gap: .55rem;
+  }
+  .amai-brand b {
+    font-size: .78rem;
+  }
+  .amai-brand small {
+    font-size: .64rem;
+  }
+  .amai-brand .amai-orb {
+    width: 33px;
+    height: 33px;
+  }
+  .amai-panel-top>.badge {
+    font-size: .58rem;
+    padding: .15rem .4rem;
+  }
+  .amai-thread {
+    max-height: 300px;
+    min-height: 132px;
+    padding: .68rem;
+  }
+  .amai-message {
+    max-width: 96%;
+  }
+  .amai-bubble {
+    padding: .65rem .74rem;
+    font-size: .77rem;
+  }
+  .amai-prompt {
+    font-size: .65rem;
+  }
+  .amai-form {
+    grid-template-columns: 1fr;
+  }
+  .amai-form .btn {
+    width: 100%;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .amai-thinking i {
+    animation: none !important;
+  }
+}

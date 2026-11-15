@@ -1,0 +1,138 @@
+/* Prediction result entry controls and removal confirmation. */
+
+.result-entry-heading {
+  text-align: center !important;
+}
+
+.result-entry-cell {
+  min-width: 330px;
+  vertical-align: middle !important;
+}
+
+.result-entry {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .42rem;
+  min-width: max-content;
+}
+
+.result-entry input[type=number] {
+  width: 3.15rem !important;
+  min-height: 38px;
+  padding-inline: .25rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-dash {
+  color: var(--dim);
+  font-weight: 700;
+}
+
+.result-entry .btn {
+  white-space: nowrap;
+}
+
+.result-remove {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.result-delete-dialog {
+  width: min(440px,calc(100vw - 2rem));
+  padding: 0;
+  border: 1px solid rgba(129,174,231,.32);
+  border-radius: 18px;
+  background: #0a172b;
+  color: #edf4ff;
+  box-shadow: 0 24px 80px rgba(0,0,0,.58);
+}
+
+.result-delete-dialog::backdrop {
+  background: rgba(2,8,18,.7);
+  backdrop-filter: blur(4px);
+}
+
+.result-delete-panel {
+  padding: 1.35rem;
+}
+
+.result-delete-panel h2 {
+  margin: .8rem 0 .45rem;
+  font-size: 1.22rem;
+}
+
+.result-delete-panel p {
+  margin: 0;
+  color: #9db0ca;
+  font-size: .88rem;
+  line-height: 1.55;
+}
+
+.result-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .55rem;
+  margin-top: 1.3rem;
+}
+
+.result-delete-actions .danger {
+  color: #ffaaa9;
+  border-color: rgba(255,107,107,.55);
+}
+
+.result-entry-heading {
+  min-width: 380px;
+  text-align: center !important;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  white-space: nowrap;
+}
+
+.result-header>span {
+  font-size: .73rem;
+}
+
+.result-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.result-bulk-actions .btn {
+  padding: .4rem .72rem;
+  font-size: .74rem;
+}
+
+@media(max-width:700px) {
+  .result-entry-heading {
+    min-width: 340px;
+  }
+  .result-header {
+    align-items: center;
+    justify-content: flex-start;
+    gap: .8rem;
+    white-space: nowrap;
+  }
+  .result-bulk-actions {
+    gap: .6rem;
+  }
+  .result-bulk-actions .btn {
+    min-height: 38px;
+    padding: .4rem .65rem;
+    font-size: .73rem;
+  }
+}
