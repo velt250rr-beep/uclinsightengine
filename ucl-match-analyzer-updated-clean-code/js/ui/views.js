@@ -12,8 +12,8 @@
   const num = (v, d = 2) => (v === null || v === undefined || isNaN(v) ? '—' : (+v).toFixed(d));
   const badge = (text, cls) => `<span class="badge ${cls || ''}">${esc(text)}</span>`;
   const statusBadge = (s) => badge(s, { ok: 'ok', manual: 'info', partial: 'warn', stale: 'warn', missing: 'bad', finished: 'ok', scheduled: 'info', live: 'warn', postponed: 'bad' }[s] || '');
-  const card = (title, body, cls = '', right = '') => `<section class="card ${cls}"><header class="card-h"><h3>${esc(title)}</h3>${right}</header><div class="card-b">${body}</div></section>`;
-  const stat = (label, value, sub, cls) => `<div class="stat ${cls || ''}"><div class="stat-v">${value}</div><div class="stat-l">${esc(label)}</div>${sub ? `<div class="stat-s">${sub}</div>` : ''}</div>`;
+  const card = (title, body, cls = '', right = '') => `<section class="card ${cls}" data-ui-card><header class="card-h"><h3>${esc(title)}</h3>${right}</header><div class="card-b">${body}</div></section>`;
+  const stat = (label, value, sub, cls) => `<div class="stat ${cls || ''}" data-ui-metric><div class="stat-v">${value}</div><div class="stat-l">${esc(label)}</div>${sub ? `<div class="stat-s">${sub}</div>` : ''}</div>`;
   const empty = (msg, action) => `<div class="empty"><p>${msg}</p>${action || ''}</div>`;
   const pageHead = (title, sub, right = '') => `<div class="page-h"><div><h1>${esc(title)}</h1>${sub ? `<p class="sub">${sub}</p>` : ''}</div><div class="page-act">${right}</div></div>`;
   const teamLogoKey = (name) => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -57,7 +57,7 @@
 
   /* ---------------------------------------------------------------- dashboard */
   function dashboard(app) {
-    const s = app.dm.summary(), hs = app.hist.stats(), bt = app.backtest;
+    const s = app.dm.summary(), hs = app.hist.stats(), bt = app.backtest, recentPredictions = app.hist.all().slice(0, 4);
     const noData = s.matches === 0;
     const btAcc = bt && bt.status === 'COMPLETE' ? bt.summary.series.model.accuracy : null;
     let h = pageHead('Dashboard', 'UEFA Champions League statistical analyzer — one calibrated 1X2 decision per match.');
@@ -83,6 +83,7 @@
     h += `<p class="dim dashboard-links"><a class="btn" href="#/fixtures">Browse all fixtures</a> <a class="btn" href="#/analysis">Choose another match</a></p>`;
     h += '<div class="grid two">';
     h += card('Live performance (saved predictions)', hs.series.length ? C.lines([{ name: 'Accuracy', color: 'var(--c-accent)', points: hs.series.map((p) => ({ y: p.accuracy })) }], { pct: true, min: 0, max: 1, refLine: 0.7, refLabel: 'target 70%', title: 'live accuracy' }) : empty('Save predictions before kickoff, then enter results to build a live track record.'));
+    h += card('Recent predictions', recentPredictions.length ? `<div class="scroll-x"><table class="tbl compact"><thead><tr><th>Match</th><th>Pick</th><th>Status</th></tr></thead><tbody>${recentPredictions.map((p) => { const evaluation = app.hist.evaluationFor(p.fixtureId); return `<tr><td><a href="#/analysis/${encodeURIComponent(p.fixtureId)}">${esc(p.homeName)} v ${esc(p.awayName)}</a><small class="dim recent-date">${esc(p.kickoff.slice(0, 10))}</small></td><td><b>${esc(p.symbol)}</b> ${pct(p.probs[p.pick])}</td><td>${evaluation ? badge(evaluation.correct ? 'Correct' : 'Incorrect', evaluation.correct ? 'ok' : 'bad') : badge('Pending', 'info')}</td></tr>`; }).join('')}</tbody></table></div>` : empty('Saved predictions will appear here.'));
     h += '</div>';
     h += card('Data quality snapshot', s.finished ? `<div class="scroll-x"><table class="tbl compact"><thead><tr><th>Field</th><th>Coverage (finished matches)</th><th></th></tr></thead><tbody>${Object.entries(s.completeness.fields).map(([f, v]) => `<tr><td>${esc(f)}</td><td>${v.have}/${s.completeness.n}</td><td><div class="meter"><i style="width:${(v.coverage * 100).toFixed(0)}%"></i></div></td></tr>`).join('')}</tbody></table></div>` : empty('No finished matches loaded.'));
     return h;
@@ -96,16 +97,30 @@
     const shown = list.slice(0, 250);
     const sel = (id, opts, cur, all) => `<select id="${id}" data-filter="fixtures"><option value="">${all}</option>${opts.map((o) => `<option value="${esc(o.v)}" ${o.v === cur ? 'selected' : ''}>${esc(o.t)}</option>`).join('')}</select>`;
     let h = pageHead('UCL Fixtures', 'Search and filter every loaded match. Click a fixture to analyse it.', '<a class="btn" href="#/data">Import / add matches</a>');
-    h += `<div class="filters"><input type="search" id="f-q" data-filter="fixtures" placeholder="Search team, stage, venue…" value="${esc(f.q || '')}" aria-label="Search matches">
+    h += card('Filter matches', `<div class="filters"><input type="search" id="f-q" data-filter="fixtures" placeholder="Search team, stage, venue…" value="${esc(f.q || '')}" aria-label="Search matches">
       ${sel('f-status', [{ v: 'scheduled', t: 'Scheduled' }, { v: 'finished', t: 'Finished' }, { v: 'live', t: 'Live' }, { v: 'postponed', t: 'Postponed' }], f.status, 'All statuses')}
       ${sel('f-season', app.dm.seasons().map((s) => ({ v: s, t: s })).reverse(), f.season, 'All seasons')}
       ${sel('f-stage', app.dm.stages().map((s) => ({ v: s, t: s })), f.stage, 'All stages')}
       ${sel('f-team', app.dm.teams().map((t) => ({ v: t.id, t: t.name })), f.teamId, 'All teams')}
-      ${sel('f-order', [{ v: 'asc', t: 'Oldest first' }], f.order, 'Newest first')}</div>`;
+      ${sel('f-order', [{ v: 'asc', t: 'Oldest first' }], f.order, 'Newest first')}</div>`, 'fixture-filter-card', `<span class="dim">${list.length} matches</span>`);
     if (!list.length) return h + empty(app.dm.summary().matches ? 'No matches match these filters.' : 'No matches loaded yet. Import data in Data Management.');
-    h += `<p class="dim">${list.length} match(es)${list.length > shown.length ? `, showing first ${shown.length}` : ''}</p>`;
-    h += `<div class="scroll-x"><table class="tbl hover"><thead><tr><th>Date (UTC)</th><th>Season</th><th>Stage</th><th>Home</th><th></th><th>Away</th><th>Status</th><th>Prediction</th></tr></thead><tbody>
-      ${shown.map((m) => { const p = app.hist.official(m.id) || app.hist.forFixture(m.id).slice(-1)[0]; const ev = app.hist.evaluationFor(m.id); return `<tr data-href="#/analysis/${encodeURIComponent(m.id)}"><td class="nw">${esc(fmtDate(m))}</td><td>${esc(m.season || '')}</td><td class="dim">${esc(m.stage || '')}</td><td>${esc(m.homeName)}</td><td class="score">${m.homeGoals !== null ? m.homeGoals + ' – ' + m.awayGoals : 'v'}</td><td>${esc(m.awayName)}</td><td>${statusBadge(m.status)}</td><td>${p ? `<b>${symLabel(p.pick)}</b> ${ev ? badge(ev.correct ? '✓' : '✗', ev.correct ? 'ok' : 'bad') : ''}` : '<span class="dim">—</span>'}</td></tr>`; }).join('')}</tbody></table></div>`;
+    if (list.length > shown.length) h += `<p class="dim fixture-list-note">Showing the first ${shown.length} of ${list.length} matches.</p>`;
+    const today = new Date().toISOString().slice(0, 10);
+    const featured = shown.filter((m) => m.status === 'scheduled' || m.status === 'live').slice().sort((a, b) => a.date.localeCompare(b.date)).find((m) => m.date.slice(0, 10) >= today) || shown[0];
+    h += card('Featured fixture', `<div class="fixture-featured"><a class="fixture-featured-main" href="#/analysis/${encodeURIComponent(featured.id)}">
+      <div class="fixture-featured-teams"><span class="fixture-featured-team">${fixtureMark(featured.homeName, 'home')}<strong>${esc(featured.homeName)}</strong></span><span class="fixture-featured-v">${featured.homeGoals !== null ? `${featured.homeGoals} – ${featured.awayGoals}` : 'v'}</span><span class="fixture-featured-team away">${fixtureMark(featured.awayName, 'away')}<strong>${esc(featured.awayName)}</strong></span></div>
+      <div class="fixture-featured-meta"><span>${esc(fixtureDate(featured))}</span><span>${esc(featured.stage || featured.season || 'UEFA Champions League')}</span>${statusBadge(featured.status)}</div></a><a class="btn primary" href="#/analysis/${encodeURIComponent(featured.id)}">Open analysis</a></div>`, 'featured-fixture-card');
+    const days = new Map();
+    shown.forEach((match) => { const key = match.date.slice(0, 10); if (!days.has(key)) days.set(key, []); days.get(key).push(match); });
+    const renderRows = (matches) => matches.map((m) => {
+      const p = app.hist.official(m.id) || app.hist.forFixture(m.id).slice(-1)[0], ev = app.hist.evaluationFor(m.id);
+      return `<tr data-href="#/analysis/${encodeURIComponent(m.id)}"><td class="nw">${esc(fmtDate(m))}</td><td>${esc(m.season || '')}</td><td class="dim">${esc(m.stage || '')}</td><td>${esc(m.homeName)}</td><td class="score">${m.homeGoals !== null ? m.homeGoals + ' – ' + m.awayGoals : 'v'}</td><td>${esc(m.awayName)}</td><td>${statusBadge(m.status)}</td><td>${p ? `<b>${symLabel(p.pick)}</b> ${ev ? badge(ev.correct ? '✓' : '✗', ev.correct ? 'ok' : 'bad') : ''}` : '<span class="dim">—</span>'}</td></tr>`;
+    }).join('');
+    for (const [day, matches] of days) {
+      const date = new Date(`${day}T12:00:00Z`);
+      const label = Number.isNaN(date.getTime()) ? day : new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
+      h += card(label, `<div class="scroll-x"><table class="tbl hover"><thead><tr><th>Date (UTC)</th><th>Season</th><th>Stage</th><th>Home</th><th></th><th>Away</th><th>Status</th><th>Prediction</th></tr></thead><tbody>${renderRows(matches)}</tbody></table></div>`, 'fixture-day-card', `<span class="dim">${matches.length} ${matches.length === 1 ? 'match' : 'matches'}</span>`);
+    }
     return h;
   }
 
@@ -325,8 +340,10 @@
       </div>
     </section>`;
     h += targetBanner(app);
+    h += '<div class="grid two bt-setup-grid">';
     h += card('Protocol (fixed)', `<ul class="compact-list"><li>Seasons requested: <b>5</b> most recent completed seasons with complete, comparable data (≥100 matches, ≥16 teams, every match has a result).</li><li>For each kickoff <i>day</i>: train only on matches from strictly earlier days → predict → store → move on. A leakage audit throws if this is ever violated.</li><li>The model sees only teams, date, venue flag and stage of the match being predicted — never its score, odds, xG or statistics.</li><li>Calibration for a match is fitted only on earlier out-of-sample predictions.</li><li>Benchmarks: normalised bookmaker probabilities (only matches with reliable odds, same subset for the model) and the training-frequency baseline.</li></ul>`);
     h += card('Season selection', `<div class="scroll-x"><table class="tbl compact"><thead><tr><th>Season</th><th>Status</th><th>Detail</th></tr></thead><tbody>${[...sel.seasons.map((x) => `<tr><td>${esc(x.season)}</td><td>${badge('used', 'ok')}</td><td>${x.matches} matches, ${x.teams} teams</td></tr>`), ...sel.rejected.map((x) => `<tr><td>${esc(x.season)}</td><td>${badge(x.usedForTraining ? 'training only' : 'rejected', x.usedForTraining ? 'info' : 'bad')}</td><td class="dim">${esc(x.reason)}</td></tr>`)].join('') || '<tr><td colspan="3" class="dim">No seasons found in loaded data.</td></tr>'}</tbody></table></div>${bt && bt.partial ? '<p class="banner warn">Fewer than 5 qualifying seasons are available — the result is flagged PARTIAL.</p>' : ''}`);
+    h += '</div>';
     if (!bt) return h + empty(s.finished ? 'Press “Run walk-forward backtest”. Nothing is shown until it has actually been run on your data.' : 'No finished matches loaded — BACKTEST DATA INSUFFICIENT.');
     h += `<p class="dim">Run ${esc(bt.runAt.slice(0, 16).replace('T', ' '))} UTC · dataset fingerprint <code>${esc(bt.datasetFingerprint)}</code> · config <code>${esc(bt.configHash)}</code> · ${bt.nFinished} finished matches loaded${app.backtestStale ? ' · <b class="warn-t">data or settings changed since this run — re-run to refresh</b>' : ''}</p>`;
     if (bt.status !== 'COMPLETE') return h;
@@ -358,10 +375,15 @@
     let h = pageHead('Model Performance', 'Measured results only. Nothing on this page is estimated or simulated.');
     h += targetBanner(app);
     if (bt && bt.status === 'COMPLETE') {
-      const sm = bt.summary;
-      h += card('Backtest — rolling accuracy (chronological)', rolling(bt.records));
-      h += card('Backtest — models compared', C.bars([['Final', sm.series.model], ['Dixon–Coles', sm.series.dixonColes], ['Elo', sm.series.elo], ['Baseline', sm.series.baseline]].map(([l, x]) => ({ label: l, value: x.accuracy, sub: 'Brier ' + num(x.brier, 3) })), { pct: true, max: 1, refLine: 0.7, refLabel: '70% target' }));
-      h += card('Detail', benchTable(sm));
+      const sm = bt.summary, model = sm.series.model;
+      h += `<div class="grid stats">${stat('1X2 accuracy', pct(model.accuracy), `${model.correct}/${model.n} · 95% CI ${pct(model.wilson.lo, 1)}–${pct(model.wilson.hi, 1)}`, model.accuracy >= 0.7 ? 'good' : 'bad')}${stat('Brier score', num(model.brier, 4), 'lower is better')}${stat('Log loss', num(model.logLoss, 4), 'lower is better')}${stat('Calibration error', pct(sm.ece, 2), 'ECE · lower is better')}${stat('Matches evaluated', sm.nScored, `${sm.seasonsUsed} season(s)`)}</div>`;
+      h += '<div class="grid two">';
+      h += card('Rolling accuracy (chronological)', rolling(bt.records));
+      h += card('Models compared', C.bars([['Final', sm.series.model], ['Dixon–Coles', sm.series.dixonColes], ['Elo', sm.series.elo], ['Baseline', sm.series.baseline]].map(([l, x]) => ({ label: l, value: x.accuracy, sub: 'Brier ' + num(x.brier, 3) })), { pct: true, max: 1, refLine: 0.7, refLabel: '70% target' }));
+      h += '</div><div class="grid two">';
+      h += card('Benchmark detail', benchTable(sm));
+      h += card('Calibration reliability', `<div class="grid two calibration-layout"><div>${C.reliability(sm.calibration.bins)}</div><div><p>Predicted probabilities are compared with observed frequencies across all three outcomes.</p><div class="scroll-x"><table class="tbl compact"><thead><tr><th>Bin</th><th>n</th><th>Predicted</th><th>Observed</th></tr></thead><tbody>${sm.calibration.bins.filter((bin) => bin.n).map((bin) => `<tr><td>${Math.round(bin.lo * 100)}–${Math.round(bin.hi * 100)}%</td><td>${bin.n}</td><td>${pct(bin.meanPred)}</td><td>${pct(bin.obsFreq)}</td></tr>`).join('')}</tbody></table></div></div></div>`);
+      h += '</div>';
     } else h += card('Backtest', empty('No completed backtest. Run one in Historical Backtesting.'));
     h += card('Live (saved predictions with entered results)', hs.summary.n ? `<div class="grid stats">${stat('Accuracy', pct(hs.summary.accuracy), `n=${hs.summary.n}`)}${stat('Brier', num(hs.summary.brier, 4))}${stat('Log loss', num(hs.summary.logLoss, 4))}</div>` + C.lines([{ name: 'Accuracy', color: 'var(--c-accent)', points: hs.series.map((p) => ({ y: p.accuracy })) }], { pct: true, min: 0, max: 1, refLine: 0.7, refLabel: '70%' }) + C.confusion(hs.summary.confusion, hs.summary.perClass) + (hs.summary.n < 30 ? '<p class="banner warn">Fewer than 30 evaluated predictions: live accuracy is statistically unreliable.</p>' : '') : empty('No evaluated live predictions yet.'));
     return h;
@@ -378,7 +400,14 @@
     const all = app.hist.all();
     let h = pageHead('Prediction History', 'Immutable log of every saved prediction.', `<button class="btn" data-act="export-history-csv">Export CSV</button><button class="btn" data-act="export-history-json">Export JSON</button><label class="btn file">Import JSON<input type="file" accept=".json,application/json" data-import="history"></label>`);
     if (!all.length) return h + empty('No predictions saved yet. Open a scheduled fixture in Match Analysis and press “Save as pre-match prediction”.');
-    h += `<div class="scroll-x"><table class="tbl hover"><thead><tr><th>Saved (UTC)</th><th>Match</th><th>Pick</th><th>1</th><th>X</th><th>2</th><th>Confidence</th><th>Timing</th><th>Result</th></tr></thead><tbody>${all.map((p) => { const e = app.hist.state.evaluations.filter((x) => x.predictionId === p.id).slice(-1)[0]; return `<tr data-href="#/analysis/${encodeURIComponent(p.fixtureId)}"><td class="nw">${esc(p.createdAt.slice(0, 16).replace('T', ' '))}</td><td>${esc(p.homeName)} v ${esc(p.awayName)}</td><td><b>${p.symbol}</b></td><td>${pct(p.probs.H)}</td><td>${pct(p.probs.D)}</td><td>${pct(p.probs.A)}</td><td>${esc(p.confidence.label)}</td><td>${badge(p.timing, p.timing === 'pre-match' ? 'ok' : 'bad')}</td><td>${e ? `${e.result.homeGoals}–${e.result.awayGoals} ${badge(e.correct ? '✓' : '✗', e.correct ? 'ok' : 'bad')}` : (app.hist.isDiscarded(p.id) ? badge('Removed from results', 'warn') : '<span class="dim">pending</span>')}</td></tr>`; }).join('')}</tbody></table></div>`;
+    const rows = all.map((p) => {
+      const e = app.hist.state.evaluations.filter((x) => x.predictionId === p.id).slice(-1)[0];
+      const discarded = !e && app.hist.isDiscarded(p.id), state = e ? (e.correct ? 'correct' : 'incorrect') : (discarded ? 'removed' : 'pending');
+      const result = e ? `${e.result.homeGoals}–${e.result.awayGoals} ${badge(e.correct ? '✓' : '✗', e.correct ? 'ok' : 'bad')}` : (discarded ? badge('Removed from results', 'warn') : '<span class="dim">pending</span>');
+      const search = [p.createdAt, p.homeName, p.awayName, p.symbol, p.confidence.label, p.timing, state].join(' ').toLocaleLowerCase();
+      return `<tr data-href="#/analysis/${encodeURIComponent(p.fixtureId)}" data-history-row data-history-state="${state}" data-history-search="${esc(search)}"><td class="nw">${esc(p.createdAt.slice(0, 16).replace('T', ' '))}</td><td>${esc(p.homeName)} v ${esc(p.awayName)}</td><td><b>${esc(p.symbol)}</b></td><td>${pct(p.probs.H)}</td><td>${pct(p.probs.D)}</td><td>${pct(p.probs.A)}</td><td>${esc(p.confidence.label)}</td><td>${badge(p.timing, p.timing === 'pre-match' ? 'ok' : 'bad')}</td><td>${result}</td></tr>`;
+    }).join('');
+    h += card('Prediction log', `<div class="history-tools"><label>Search predictions<input type="search" id="history-search" data-history-search placeholder="Search team, pick or confidence" aria-label="Search prediction history"></label><label>Result status<select id="history-status" data-history-status><option value="all">All statuses</option><option value="pending">Pending</option><option value="correct">Correct</option><option value="incorrect">Incorrect</option><option value="removed">Removed from results</option></select></label></div><p class="dim history-count" id="history-count" role="status" aria-live="polite">${all.length} prediction${all.length === 1 ? '' : 's'}</p><div class="scroll-x"><table class="tbl hover"><thead><tr><th>Saved (UTC)</th><th>Match</th><th>Pick</th><th>1</th><th>X</th><th>2</th><th>Confidence</th><th>Timing</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table></div><div class="history-empty empty" id="history-empty" hidden><p>No predictions match these filters.</p></div>`, 'history-card');
     return h;
   }
 
@@ -396,8 +425,8 @@
       <p class="dim">For richer inputs, import a trusted CSV or use a Custom JSON endpoint with <code>oddsH/oddsD/oddsA</code>, <code>homeXg/awayXg</code> and shot fields. Rows are validated: invalid entries are rejected, partial odds are ignored, and missing values stay missing. xG is used only when enabled and the required team history is available. After changing data or engine settings, re-run the walk-forward backtest and compare Brier score and log loss.</p>
       <label>Season start year(s), comma separated<input id="api-seasons" value="${esc(app.settings.api.seasons || '')}" placeholder="2024, 2023, 2022"></label>
       <button class="btn primary" data-act="api-fetch" ${app.settings.api.baseUrl ? '' : 'disabled'}>Fetch matches from API</button> <button class="btn" data-act="api-standings" ${app.settings.api.baseUrl ? '' : 'disabled'}>Fetch standings</button><div id="api-out"></div>`);
-    h += '</div>';
     h += card('Add a match manually', `<form id="manual-match" class="form-grid"><label>Date / kickoff (UTC)<input name="date" required placeholder="2026-11-25T20:00:00Z"></label><label>Home team<input name="home" required list="teams-dl"></label><label>Away team<input name="away" required list="teams-dl"></label><label>Stage<input name="stage" placeholder="League Phase"></label><label>Venue<input name="venue"></label><label>Home goals (if played)<input name="homeGoals" type="number" min="0" max="20"></label><label>Away goals (if played)<input name="awayGoals" type="number" min="0" max="20"></label><label>Neutral venue<select name="neutral"><option value="0">No</option><option value="1">Yes</option></select></label><label>Odds 1<input name="oddsH" placeholder="2.10"></label><label>Odds X<input name="oddsD"></label><label>Odds 2<input name="oddsA"></label><label>Home xG<input name="homeXg"></label><label>Away xG<input name="awayXg"></label><div class="full"><button class="btn primary">Validate &amp; add</button></div><datalist id="teams-dl">${app.dm.teams().map((t) => `<option value="${esc(t.name)}">`).join('')}</datalist></form>`);
+    h += '</div>';
     if (conf.length) h += card('Conflicts: provider value differs from your manual correction', `<table class="tbl"><thead><tr><th>Match</th><th>Field</th><th>Your value</th><th>Incoming</th><th>Source</th><th></th></tr></thead><tbody>${conf.map((c) => { const m = app.dm.getMatch(c.matchId); return `<tr><td>${m ? esc(m.homeName + ' v ' + m.awayName) : esc(c.matchId)}</td><td>${esc(c.field)}</td><td>${esc(c.manual)}</td><td>${esc(c.incoming)}</td><td>${esc(c.source)}</td><td class="nw"><button class="btn sm" data-act="resolve" data-i="${c.index}" data-choice="keep-manual">Keep mine</button> <button class="btn sm" data-act="resolve" data-i="${c.index}" data-choice="accept-incoming">Use incoming</button></td></tr>`; }).join('')}</tbody></table>`, 'warn-card');
     const recent = app.dm.listMatches().slice(-40).reverse();
     h += card('Edit / correct matches (latest 40; use Fixtures filters to find others)', recent.length ? `<div class="scroll-x"><table class="tbl compact"><thead><tr><th>Date</th><th>Match</th><th>Score</th><th>Manual</th><th></th></tr></thead><tbody>${recent.map((m) => `<tr><td class="nw">${esc(m.date.slice(0, 10))}</td><td>${esc(m.homeName)} v ${esc(m.awayName)}</td><td><form class="inline" data-form="edit-result" data-id="${esc(m.id)}"><input type="number" name="hg" min="0" max="20" value="${m.homeGoals ?? ''}" aria-label="home goals"> <span class="result-dash" aria-hidden="true">–</span> <input type="number" name="ag" min="0" max="20" value="${m.awayGoals ?? ''}" aria-label="away goals"> <button class="btn sm">Set</button></form></td><td>${m.manualFields.length ? badge(m.manualFields.join(', '), 'info') + ` <button class="btn sm" data-act="clear-overrides" data-id="${esc(m.id)}">Revert</button>` : ''}</td><td><button class="btn sm danger" data-act="delete-match" data-id="${esc(m.id)}">Delete</button></td></tr>`).join('')}</tbody></table></div>` : empty('Nothing to edit yet.'));
@@ -413,7 +442,7 @@
     const n = (path, label, step, hint) => { const v = path.split('.').reduce((o, k) => o[k], c); return `<label>${esc(label)}<input type="number" step="${step}" name="${path}" value="${v}">${hint ? `<small>${esc(hint)}</small>` : ''}</label>`; };
     let h = pageHead('Settings', 'Engine parameters, data provider and display. Changing the engine invalidates the stored backtest (it is flagged until re-run).');
     h += `<div class="grid two">`;
-    h += card('Fixed engine configuration', `<table class="tbl compact"><tbody><tr><td>Analysis level</td><td>Advanced</td></tr><tr><td>Theme</td><td>Dark</td></tr><tr><td>Data source</td><td>Hybrid (API + manual)</td></tr><tr><td>Backtest</td><td>5 most recent completed seasons</td></tr><tr><td>Validation</td><td>Walk-forward</td></tr><tr><td>Benchmarks</td><td>Bookmaker + statistical baseline</td></tr><tr><td>Target accuracy</td><td>70% (evaluation goal, not guaranteed)</td></tr><tr><td>Final output</td><td>Exactly one 1X2 selection</td></tr></tbody></table>`);
+    h += card('Fixed engine configuration', `<table class="tbl compact"><tbody><tr><td>Analysis level</td><td>Advanced</td></tr><tr><td>Theme</td><td>Dark</td></tr><tr><td>Data source</td><td>Hybrid (API + manual)</td></tr><tr><td>Backtest</td><td>5 most recent completed seasons</td></tr><tr><td>Validation</td><td>Walk-forward</td></tr><tr><td>Benchmarks</td><td>Bookmaker + statistical baseline</td></tr><tr><td>Target accuracy</td><td>70% (evaluation goal, not guaranteed)</td></tr><tr><td>Final output</td><td>Exactly one 1X2 selection</td></tr></tbody></table><h4>About this build</h4><p>Pure HTML/CSS/vanilla JS. Network calls use the endpoint you configure. Data is saved in this browser when LocalStorage is available.</p><p class="dim">Engine version ${esc(c.version)} · config hash <code>${esc(NS.statistics.hashString(JSON.stringify(c)))}</code></p>`);
     h += card('Data provider', `<form id="api-form" class="stack"><label>Provider<select name="provider"><option value="football-data" ${api.provider === 'football-data' ? 'selected' : ''}>football-data.org (via proxy)</option><option value="custom" ${api.provider === 'custom' ? 'selected' : ''}>Custom JSON endpoint</option></select></label>
       <label>Proxy base URL<input name="baseUrl" value="${esc(api.baseUrl)}" placeholder="https://your-proxy.workers.dev"><small>Never paste an API key here. Secret keys must live in a server-side proxy (see <code>proxy/worker.js</code> and README).</small></label>
       <label>Timeout (ms)<input type="number" name="timeoutMs" min="2000" max="60000" value="${api.timeoutMs}"></label><button class="btn primary">Save provider settings</button></form>`);
@@ -428,7 +457,10 @@
       <label class="check"><input type="checkbox" name="squad.enabled" ${c.squad.enabled ? 'checked' : ''}> Apply squad adjustment (UNVALIDATED)</label>
       ${n('squad.replacementDrop', 'Squad: replacement drop', 0.05, 'fraction of a missing player’s share lost')}${n('squad.maxReduction', 'Squad: max reduction per team', 0.05)}</div>
       <button class="btn primary">Save &amp; apply</button> <button class="btn" type="button" data-act="reset-engine">Reset to defaults</button></form>`);
-    h += card('About this build', `<p>Pure HTML/CSS/vanilla JS. No server calls except to the proxy you configure. All data stays in this browser (LocalStorage).</p><p class="dim">Engine version ${esc(c.version)} · config hash <code>${esc(NS.statistics.hashString(JSON.stringify(c)))}</code></p>`);
+    h += '<div class="grid two settings-runtime-grid">';
+    h += card('AMAI connection', `<div class="settings-status-row">${badge(api.baseUrl ? 'Endpoint URL saved' : 'Endpoint URL not set', api.baseUrl ? 'ok' : 'warn')}<a href="#/analysis">Open Match Analysis</a></div><p>AMAI calls <code>/amai/respond</code> on the endpoint configured above. Keep the provider key as a server-side Worker secret; it is not stored in this app.</p><p class="dim">Only a match summary, your question and short chat history are sent when you use AMAI.</p>`);
+    h += card('Browser storage', `<div class="settings-status-row">${badge(app.storage.persistent ? 'LocalStorage active' : 'Memory only', app.storage.persistent ? 'ok' : 'warn')}<b>${(app.storage.usage() / 1024).toFixed(0)} KB used</b></div><p>${app.storage.persistent ? 'Match data, predictions and settings are saved in this browser.' : 'Data is held in memory for this tab and will not persist after it closes.'} Use <a href="#/data">Data Management</a> to export or restore a backup.</p><p class="dim">A private or restricted browser session may clear its local data when it closes.</p>`);
+    h += '</div>';
     return h;
   }
 

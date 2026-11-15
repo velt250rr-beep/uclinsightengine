@@ -1,0 +1,348 @@
+/* card-ui.css — shared card layout, content variants, responsive behavior, and motion. */
+/* Shared card system: consistent panels, metric tiles, chart/table variants, and forms. */
+:root {
+  --ui-card-radius: 19px;
+  --ui-card-gap: clamp(.8rem,1.35vw,1.1rem);
+  --ui-card-pad: clamp(.9rem,1.5vw,1.15rem);
+}
+
+.mc-carousel,
+.mc-hero,
+.mc-card,
+.bt-progress {
+  border-radius: var(--ui-card-radius);
+}
+
+[data-ui-card] {
+  min-width: 0;
+  margin: 0 0 var(--ui-card-gap);
+  border-radius: var(--ui-card-radius);
+  animation: ui-card-reveal .34s cubic-bezier(.2,.7,.2,1) both;
+}
+
+[data-ui-card] .card-h {
+  gap: .8rem;
+  border-radius: var(--ui-card-radius) var(--ui-card-radius) 0 0;
+}
+
+[data-ui-card] .card-h h3 {
+  min-width: 0;
+  text-wrap: pretty;
+}
+
+[data-ui-card] .card-b {
+  min-width: 0;
+  padding: var(--ui-card-pad);
+}
+
+#view>.grid>[data-ui-card] {
+  height: 100%;
+  margin: 0;
+}
+
+.grid.two {
+  align-items: stretch;
+  gap: var(--ui-card-gap);
+}
+
+/* Variants keep dense content legible without adding a panel around each item. */
+[data-ui-card]:has(.chart) .card-b {
+  padding: clamp(.8rem,1.4vw,1.2rem);
+}
+
+[data-ui-card]:has(.tbl) .card-b {
+  padding: .65rem;
+}
+
+[data-ui-card] .scroll-x {
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+}
+
+[data-ui-card]:has(>.card-b>.filters) .card-b {
+  padding: .8rem;
+}
+
+[data-ui-card] .card-b>.filters {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  margin: 0;
+}
+
+[data-ui-card] form label {
+  min-width: 0;
+}
+
+[data-ui-metric] {
+  min-width: 0;
+  border-radius: 16px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.045) inset,0 10px 25px rgba(0,0,0,.16);
+}
+
+[data-ui-metric] .stat-v {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-ui-metric].stat:hover {
+  transform: none;
+  border-color: rgba(113,151,203,.19);
+  box-shadow: 0 1px 0 rgba(255,255,255,.045) inset,0 10px 25px rgba(0,0,0,.16);
+}
+
+[data-ui-metric].stat.good:hover {
+  border-color: rgba(62,207,142,.33);
+}
+
+[data-ui-metric].stat.bad:hover {
+  border-color: rgba(255,107,107,.36);
+}
+
+/* Fixture browsing: highlight the next useful matchup, then group the full list by UTC day. */
+.fixture-filter-card .card-h>span,
+.fixture-day-card .card-h>span {
+  flex: none;
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fixture-list-note {
+  margin: -.1rem 0 .8rem;
+}
+
+.fixture-featured {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.fixture-featured-main {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: inherit;
+}
+
+.fixture-featured-main:hover {
+  text-decoration: none;
+}
+
+.fixture-featured-teams {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center;
+  gap: clamp(.45rem,2vw,1.5rem);
+}
+
+.fixture-featured-team {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  min-width: 0;
+}
+
+.fixture-featured-team.away {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.fixture-featured-team strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1rem,2vw,1.35rem);
+}
+
+.fixture-featured-v {
+  color: #91a8c8;
+  font-size: 1.05rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.fixture-featured-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  margin: .9rem 0 0;
+  color: #91a8c8;
+  font-size: .78rem;
+}
+
+.fixture-day-card .scroll-x {
+  max-height: min(65vh,620px);
+}
+
+/* Prediction history search controls and no-match feedback. */
+.history-tools {
+  display: grid;
+  grid-template-columns: minmax(220px,1.5fr) minmax(180px,.7fr);
+  align-items: end;
+  gap: .8rem;
+  margin: 0 0 .8rem;
+}
+
+.history-tools label {
+  display: grid;
+  gap: .35rem;
+  color: #b8c9e1;
+  font-size: .78rem;
+  font-weight: 650;
+}
+
+.history-count {
+  margin: 0 0 .55rem;
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.recent-date {
+  display: block;
+  margin-top: .18rem;
+}
+
+.tbl tr[hidden],
+.history-empty[hidden] {
+  display: none !important;
+}
+
+/* Settings are grouped by purpose; status rows remain informational. */
+.settings-detail-grid,
+.settings-runtime-grid {
+  align-items: stretch;
+}
+
+.settings-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-bottom: .8rem;
+}
+
+.settings-status-row>b {
+  color: #dceaff;
+  font-size: .82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Brief chart entrance: animate marks only, leaving axes and numeric labels still. */
+.chart polyline {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: ui-chart-line .72s cubic-bezier(.2,.7,.2,1) both;
+}
+
+.chart rect {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: ui-chart-bar .5s cubic-bezier(.2,.7,.2,1) both;
+}
+
+.chart circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ui-chart-point .38s ease-out both;
+}
+
+@keyframes ui-card-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ui-chart-line {
+  from {
+    transform: scaleX(.08);
+    opacity: .45;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes ui-chart-bar {
+  from {
+    transform: scaleY(.12);
+    opacity: .55;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes ui-chart-point {
+  from {
+    transform: scale(.72);
+    opacity: .4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Only panels with an actual action lift on pointer hover; data-only cards stay still. */
+@media (hover:hover) and (pointer:fine) {
+  [data-ui-card].card:hover {
+    transform: none;
+  }
+
+  [data-ui-card].card:not(:has(a,button,[role="button"],[data-href])):hover {
+    border-color: rgba(113,151,203,.19);
+    box-shadow: 0 1px 0 rgba(255,255,255,.045) inset,0 14px 36px rgba(0,0,0,.2);
+  }
+
+  [data-ui-card].card:has(a,button,[role="button"],[data-href]) {
+    transition: border-color .22s ease,box-shadow .22s ease,transform .22s ease;
+  }
+
+  [data-ui-card].card:has(a,button,[role="button"],[data-href]):hover {
+    transform: translateY(-2px);
+    border-color: rgba(111,180,255,.36);
+    box-shadow: 0 1px 0 rgba(255,255,255,.06) inset,0 18px 42px rgba(0,0,0,.28),0 0 28px rgba(57,125,218,.05);
+  }
+}
+
+@media (hover:none) {
+  [data-ui-card] {
+    transition: none;
+  }
+}
+
+@media (max-width:700px) {
+  .fixture-featured {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .fixture-featured>.btn {
+    justify-content: center;
+  }
+
+  .history-tools {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The reduced-motion preference also covers route/card/chart entrance effects. */
+@media (prefers-reduced-motion:reduce) {
+  [data-ui-card],
+  .chart polyline,
+  .chart rect,
+  .chart circle {
+    animation: none !important;
+    transition: none !important;
+  }
+}
