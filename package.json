@@ -1,0 +1,10 @@
+{
+  "name": "ucl-match-analyzer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Statistical UEFA Champions League 1X2 analyzer (vanilla HTML/CSS/JS)",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  }
+}
